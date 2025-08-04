@@ -30,7 +30,7 @@ func NewGame() *Game {
 		State:      ChoosingCharacter,
 		Characters: GetStarterCharacters(),
 		Selected:   0,
-		StepDelay:  350 * time.Millisecond,
+		StepDelay:  250 * time.Millisecond,
 		ShowStats:  false,
 	}
 }
@@ -52,6 +52,7 @@ func (g *Game) Draw() {
 
 	switch g.State {
 	case ChoosingCharacter:
+
 		g.drawCharacterSelection()
 	case Playing:
 		g.drawGame()
@@ -75,6 +76,7 @@ func (g *Game) updateCharacterSelection() {
 		g.State = Playing
 	}
 }
+
 func (g *Game) updatePlaying() {
 	g.updateMovement()
 
@@ -103,6 +105,7 @@ func (g *Game) updatePlaying() {
 		g.Player.X = newMap.SpawnX
 		g.Player.Y = newMap.SpawnY
 	}
+
 }
 
 // Hanya untuk test
@@ -202,24 +205,45 @@ func (g *Game) updateMovement() {
 	now := time.Now()
 	if now.Sub(g.LastMove) >= g.StepDelay {
 		moved := false
+		newX, newY := g.Player.X, g.Player.Y
+
 		if rl.IsKeyDown(rl.KeyRight) && IsWalkable(g.Player.X+1, g.Player.Y) {
-			g.Player.X++
+			newX = g.Player.X + 1
 			moved = true
 		}
 		if rl.IsKeyDown(rl.KeyLeft) && IsWalkable(g.Player.X-1, g.Player.Y) {
-			g.Player.X--
+			newX = g.Player.X - 1
 			moved = true
 		}
 		if rl.IsKeyDown(rl.KeyUp) && IsWalkable(g.Player.X, g.Player.Y-1) {
-			g.Player.Y--
+			newY = g.Player.Y - 1
 			moved = true
 		}
 		if rl.IsKeyDown(rl.KeyDown) && IsWalkable(g.Player.X, g.Player.Y+1) {
-			g.Player.Y++
+			newY = g.Player.Y + 1
 			moved = true
 		}
+
 		if moved {
+			g.Player.X = newX
+			g.Player.Y = newY
 			g.LastMove = now
+
+			// Check for teleport
+			if teleport := CheckTeleport(g.Player.X, g.Player.Y); teleport != nil {
+				g.teleportPlayer(teleport)
+			}
 		}
 	}
+}
+func (g *Game) teleportPlayer(teleport *Teleport) {
+	// Change to target map
+	ChangeMap(teleport.ToMapIndex)
+
+	// Move player to target position
+	g.Player.X = teleport.ToX
+	g.Player.Y = teleport.ToY
+
+	// Optional: Add some visual feedback or sound effect here
+	println("Teleported to " + GetCurrentMap().Name + " at (" + itoa(teleport.ToX) + "," + itoa(teleport.ToY) + ")")
 }
