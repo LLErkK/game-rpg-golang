@@ -11,6 +11,7 @@ const (
 	Stairs
 	Water
 	Grass
+	Portal
 )
 
 type GameMap struct {
@@ -131,6 +132,7 @@ func GetCurrentMap() *GameMap {
 
 func IsWalkable(x, y int) bool {
 	currentMap := GetCurrentMap()
+
 	if x < 0 || y < 0 || x >= currentMap.Width || y >= currentMap.Height {
 		return false
 	}
@@ -209,6 +211,8 @@ func getTileColor(tile TileType) rl.Color {
 		return rl.Blue
 	case Grass:
 		return rl.Green
+	case Portal:
+		return rl.Red
 	default:
 		return rl.Black
 	}
